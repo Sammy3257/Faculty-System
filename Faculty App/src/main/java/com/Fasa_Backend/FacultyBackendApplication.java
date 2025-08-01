@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class FassaBackendApplication {
+public class FacultyBackendApplication {
 	public static void main(String[] args) {
 		Dotenv dotenv = Dotenv.load();
 
@@ -15,6 +15,6 @@ public class FassaBackendApplication {
 		System.setProperty("APP_USERNAME", dotenv.get("APP_USERNAME"));
 		System.setProperty("APP_PASSWORD", dotenv.get("APP_PASSWORD"));
 
-		SpringApplication.run(FassaBackendApplication.class, args);
+		SpringApplication.run(FacultyBackendApplication.class, args);
 	}
 }
