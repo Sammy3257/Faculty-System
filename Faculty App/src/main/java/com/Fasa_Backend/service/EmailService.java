@@ -30,4 +30,23 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendVerificationEmail(String to, String name, String token) {
+        String subject = "Verify Your TTU Student Email";
+        String url = "http://localhost:8080/api/auth/verify?token=" + token;
+
+        String body = "Hello " + name + ",\n\n" +
+                "Thank you for registering. Please verify your TTU student email by clicking the link below:\n" +
+                url + "\n\n" +
+                "This link will expire in 24 hours.\n\n" +
+                "Best regards,\n" +
+                "TTU Support Team";
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(body);
+
+        mailSender.send(message);
+    }
 }

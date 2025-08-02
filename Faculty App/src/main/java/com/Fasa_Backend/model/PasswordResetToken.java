@@ -1,9 +1,6 @@
 package com.Fasa_Backend.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
@@ -19,6 +16,16 @@ public class PasswordResetToken {
     private String uniEmail;
 
     private LocalDateTime expiryDate;
+
+    public enum TokenType {
+        PASSWORD_RESET,
+        EMAIL_VERIFICATION
+    }
+
+
+    @Enumerated(EnumType.STRING)
+    private TokenType tokenType; // NEW: To distinguish purpose
+
 
     public boolean isExpired() {
         return expiryDate.isBefore(LocalDateTime.now());
@@ -65,4 +72,7 @@ public class PasswordResetToken {
     public void setExpiryDate(LocalDateTime expiryDate) {
         this.expiryDate = expiryDate;
     }
+
+    public TokenType getTokenType() { return tokenType; }
+    public void setTokenType(TokenType tokenType) { this.tokenType = tokenType; }
 }

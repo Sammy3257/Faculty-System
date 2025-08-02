@@ -15,17 +15,22 @@ public class Student {
     public String uniEmail;
     public String password;
 
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean isVerified = false;
+
+
 
 
     public Student() {
     }
 
-    public Student(Long id, String name, String studentId, String uniEmail, String password) {
+    public Student(Long id, String name, String studentId, String uniEmail, String password,boolean isVerified) {
         this.id = id;
         this.name = name;
         this.studentId = studentId;
         this.uniEmail = uniEmail;
         this.password = password;
+        this.isVerified = isVerified;
     }
 
     public Long getId() {
@@ -68,5 +73,11 @@ public class Student {
         this.password = password;
     }
 
+    public boolean isVerified() {
+        return isVerified;
+    }
 
+    public void setVerified(boolean verified) {
+        isVerified = verified;
+    }
 }

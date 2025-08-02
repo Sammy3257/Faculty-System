@@ -45,42 +45,88 @@ public class AuthService {
 
 
 
+
+
 // Registration logic
-    public ResponseEntity<?> register(RegistrationRequest request){
-        Map<String, Object> response = new HashMap<>();
+public ResponseEntity<?> register(RegistrationRequest request){
+    Map<String, Object> response = new HashMap<>();
 
-        if (studentRepository.existsByUniEmail(request.getUniEmail())) {
-            response.put("error", "Email already exists");
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(response); // 409 is better than 302
-        }
-
-        if (!request.getUniEmail().matches("^[A-Z]{5}\\d{5}@ttu\\.edu\\.gh$")) {
-            response.put("error", "Email must be a valid TTU email (e.g. BCICT22000@ttu.edu.gh)");
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        if (!request.getStudentId().matches("^[A-Z]{2}/[A-Z]{3}/\\d{2}/\\d{3}$")) {
-            response.put("error", "Student ID must be in the format BC/ICT/22/352");
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        if(!request.getPassword().equals(request.getConfirmPassword())){
-            response.put("error", "Password does not match");
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        String encodedPassword = passwordEncoder.encode(request.getPassword());
-
-        Student newStudent = new Student();
-        newStudent.setName(request.getName());
-        newStudent.setStudentId(request.getStudentId());
-        newStudent.setUniEmail(request.getUniEmail());
-        newStudent.setPassword(encodedPassword);
-
-        studentRepository.save(newStudent);
-        response.put("message", "Registration Successful");
-        return ResponseEntity.ok(response);
+    if (studentRepository.existsByUniEmail(request.getUniEmail())) {
+        response.put("error", "Email already exists");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response); // 409 is better than 302
     }
+
+    if (!request.getUniEmail().matches("^[A-Z]{5}\\d{5}@ttu\\.edu\\.gh$")) {
+        response.put("error", "Email must be a valid TTU email (e.g. BCICT22000@ttu.edu.gh)");
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    if (!request.getStudentId().matches("^[A-Z]{2}/[A-Z]{3}/\\d{2}/\\d{3}$")) {
+        response.put("error", "Student ID must be in the format BC/ICT/22/352");
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    if(!request.getPassword().equals(request.getConfirmPassword())){
+        response.put("error", "Password does not match");
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    String encodedPassword = passwordEncoder.encode(request.getPassword());
+
+    Student newStudent = new Student();
+    newStudent.setName(request.getName());
+    newStudent.setStudentId(request.getStudentId());
+    newStudent.setUniEmail(request.getUniEmail());
+    newStudent.setPassword(encodedPassword);
+
+    String token = UUID.randomUUID().toString();
+
+    PasswordResetToken verificationToken = new PasswordResetToken();
+    verificationToken.setToken(token);
+    verificationToken.setUniEmail(newStudent.getUniEmail());
+    verificationToken.setExpiryDate(LocalDateTime.now().plusDays(1));
+    verificationToken.setTokenType(PasswordResetToken.TokenType.EMAIL_VERIFICATION);
+    passwordResetTokenRepository.save(verificationToken);
+
+    emailService.sendVerificationEmail(newStudent.getUniEmail(), newStudent.getName(), token);
+
+
+
+    studentRepository.save(newStudent);
+    response.put("message", "Registration Successful");
+    return ResponseEntity.ok(response);
+}
+
+
+
+
+
+
+//Verification Logic
+    public ResponseEntity<?> verifyUser(String token) {
+        PasswordResetToken verificationToken = passwordResetTokenRepository.findByToken(token);
+
+        if (verificationToken == null
+                || verificationToken.getTokenType() != PasswordResetToken.TokenType.EMAIL_VERIFICATION
+                || verificationToken.isExpired()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid or expired token."));
+        }
+
+        String email = verificationToken.getUniEmail();
+        Student student = studentRepository.findByUniEmail(email);
+        if (student == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Student not found."));
+        }
+
+        student.setVerified(true);
+        studentRepository.save(student);
+
+        passwordResetTokenRepository.delete(verificationToken);
+
+        return ResponseEntity.ok(Map.of("message", "Email verified successfully. You can now log in."));
+    }
+
+
 
 
 
@@ -112,6 +158,9 @@ public class AuthService {
 
 
 
+
+
+
 //Forget Password logic
     public ResponseEntity<?> forgotPassword(ForgetResetPasswordRequest request) {
         Map<String, String> response = new HashMap<>();
@@ -138,6 +187,8 @@ public class AuthService {
 
         return ResponseEntity.ok(response);
     }
+
+
 
 
 
